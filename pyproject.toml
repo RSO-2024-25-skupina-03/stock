@@ -1,0 +1,19 @@
+[project]
+name = "stock"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Iztok Bajcar", email = "ib8548@student.uni-lj.si"},
+]
+dependencies = [
+    "pymongo>=4.10.1",
+    "uvicorn>=0.32.0",
+    "fastapi>=0.115.3",
+]
+requires-python = "==3.11.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
