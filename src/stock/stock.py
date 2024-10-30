@@ -1,3 +1,11 @@
+from db import create_stock_collection_if_not_exists
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+
+
 class StockInfo:
     def __init__(self, product_id, stock_amount):
         self.product_id = product_id
@@ -18,4 +26,12 @@ def get_stock_info(db_conn, product_id) -> StockInfo:
     Returns:
         StockInfo: An object containing stock information.
     """
-    return StockInfo("TEST PRODUCT", 1000)
+    create_stock_collection_if_not_exists(db_conn)
+
+    product_stock = db_conn["stock"].find_one({"product_id": product_id})
+    if product_stock is None:
+        return StockInfo(product_id, 0)
+    else:
+        product_id = product_stock["product_id"]
+        stock_amount = product_stock["stock_amount"]
+        return StockInfo(product_id, stock_amount)
