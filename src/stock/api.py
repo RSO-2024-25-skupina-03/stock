@@ -14,6 +14,18 @@ async def root():
     return {"status": "Stock API online"}
 
 
+@app.get("/ids")
+async def ids() -> list:
+    """An endpoint to fetch all product IDs.
+
+    Returns:
+        list: A list of product IDs.
+    """
+    db_conn = connect_to_database("stock")
+    product_ids = db_conn["stock"].distinct("product_id")
+    return product_ids
+
+
 @app.get("/{id}")
 async def product_stock(product_id) -> dict:
     """An endpoint to fetch stock information for a product.
