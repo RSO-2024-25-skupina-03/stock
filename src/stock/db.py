@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
 
-def create_stock_collection(db):
+def _create_stock_collection(db):
     logger.info("Creating collection 'stock'!")
     # TODO check result
     db.create_collection(
@@ -38,10 +38,10 @@ def create_stock_collection_if_not_exists(db):
         logger.info("Collection 'stock' available.")
     except OperationFailure:
         # create the stock collection
-        create_stock_collection(db)
+        _create_stock_collection(db)
 
 
-def connect_to_database(dbname):
+def connect_to_database(host, dbname):
     client = MongoClient("mongo", 27017)
-    db = client["rso_shop"]
+    db = client[dbname]
     return db

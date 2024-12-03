@@ -21,7 +21,7 @@ async def ids() -> list:
     Returns:
         list: A list of product IDs.
     """
-    db_conn = connect_to_database("stock")
+    db_conn = connect_to_database("mongo", "rso_shop")
     product_ids = db_conn["stock"].distinct("product_id")
     return product_ids
 
@@ -36,7 +36,7 @@ async def product_stock(product_id) -> dict:
     Returns:
         dict: An object containing stock information.
     """
-    db_conn = connect_to_database("stock")
+    db_conn = connect_to_database("mongo", "rso_shop")
     stock_info = get_stock_info(db_conn, product_id)
     return stock_info.to_dict()
 
@@ -45,7 +45,7 @@ async def product_stock(product_id) -> dict:
 @app.post("/generate_test_data")
 async def generate_test_data():
     """An endpoint to generate test data for the stock collection."""
-    db_conn = connect_to_database("stock")
+    db_conn = connect_to_database("mongo", "rso_shop")
 
     # create the collection if it doesn't exist yet
     create_stock_collection_if_not_exists(db_conn)
