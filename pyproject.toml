@@ -2,22 +2,25 @@
 name = "stock"
 version = "0.1.0"
 description = "Default template for PDM package"
-authors = [
-    {name = "Iztok Bajcar", email = "ib8548@student.uni-lj.si"},
-]
+authors = [{ name = "Iztok Bajcar", email = "ib8548@student.uni-lj.si" }]
 dependencies = [
     "pymongo>=4.10.1",
     "uvicorn>=0.32.0",
     "fastapi>=0.115.3",
     "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-asyncio>=0.24.0",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 
 [tool.pdm]
 distribution = false
 
 [tool.pdm.scripts]
-test = "python3 -m pytest"
+test = "python3 -m pytest --cov --"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

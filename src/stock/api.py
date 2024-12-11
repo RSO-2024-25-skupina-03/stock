@@ -1,6 +1,6 @@
-from db import connect_to_database, create_stock_collection_if_not_exists
+from .db import connect_to_database, create_stock_collection_if_not_exists
+from .stock import get_stock_info
 from fastapi import FastAPI
-from stock import get_stock_info
 import uvicorn
 
 app = FastAPI()
