@@ -5,7 +5,7 @@
 #     _create_stock_collection,
 #     create_stock_collection_if_not_exists,
 # )
-from src.stock import db
+from rso_stock import db
 import pymongo
 import pytest
 

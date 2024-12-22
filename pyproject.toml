@@ -21,6 +21,7 @@ license = { text = "MIT" }
 distribution = false
 
 [tool.pdm.scripts]
+api = { cmd = "src/rso_stock/api.py", env = { "PYTHONPATH" = "src" } }
 test = "tox"
 
 [tool.pytest.ini_options]
@@ -34,7 +35,7 @@ env_list = py{311},lint
 [testenv]
 groups = dev
 commands =
-    pytest --cov
+    pytest --cov tests
 deps =
     pytest
     pytest-cov

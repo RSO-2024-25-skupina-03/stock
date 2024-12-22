@@ -1,5 +1,5 @@
-from db import connect_to_database, create_stock_collection_if_not_exists
-from stock_utils import get_stock_info
+from rso_stock.db import connect_to_database, create_stock_collection_if_not_exists
+from rso_stock.stock_utils import get_stock_info
 from fastapi import FastAPI
 import uvicorn
 
