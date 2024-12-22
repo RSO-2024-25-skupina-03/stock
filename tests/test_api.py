@@ -1,8 +1,7 @@
 """Unit tests for the api module."""
 
 import pytest
-from src.stock import db
-from src.stock import api
+from stock import api
 
 
 @pytest.mark.asyncio

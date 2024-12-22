@@ -1,7 +1,6 @@
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 import logging
-import os
 import sys
 
 logger = logging.getLogger(__name__)

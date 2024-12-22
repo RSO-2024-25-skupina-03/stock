@@ -10,6 +10,7 @@ dependencies = [
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "pytest-asyncio>=0.24.0",
+    "tox>=4.23.2",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
@@ -20,7 +21,27 @@ license = { text = "MIT" }
 distribution = false
 
 [tool.pdm.scripts]
-test = "python3 -m pytest --cov --"
+test = "tox"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+env_list = py{311},lint
+
+[testenv]
+groups = dev
+commands =
+    pytest --cov
+deps =
+    pytest
+    pytest-cov
+
+[testenv:lint]
+groups = lint
+commands =
+    ruff check src tests
+deps =
+    ruff"""
