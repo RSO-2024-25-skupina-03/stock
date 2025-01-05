@@ -1,7 +1,8 @@
 from rso_stock.db import connect_to_database, create_stock_collection_if_not_exists
-from rso_stock.stock_utils import get_stock_info
+from rso_stock.stock_utils import get_stock_info, get_product_info
 from fastapi import FastAPI
 import uvicorn
+import json
 
 app = FastAPI()
 
@@ -41,6 +42,21 @@ async def product_stock(product_id) -> dict:
     return stock_info.to_dict()
 
 
+@app.get("/info/{id}")
+async def product_info(product_id) -> dict:
+    """An endpoint to fetch product information.
+
+    Args:
+        product_id (str): Product ID.
+
+    Returns:
+        dict: An object containing product information.
+    """
+    db_conn = connect_to_database("mongo", "rso_shop")
+    product_info = get_product_info(db_conn, product_id)
+    return product_info.to_dict()
+
+
 # TODO protect this endpoint (JWT?)
 @app.post("/generate_test_data")
 async def generate_test_data():
@@ -59,6 +75,9 @@ async def generate_test_data():
             {"product_id": "4", "stock_amount": 0},
         ]
     )
+
+    products_data = json.load(open("src/rso_stock/test_product_data.json"))
+    db_conn["products"].insert_many(products_data["data"])
     return {"status": "Test data generated!"}
 
 

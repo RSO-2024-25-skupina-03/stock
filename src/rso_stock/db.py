@@ -31,6 +31,52 @@ def _create_stock_collection(db):
     )
 
 
+def _create_products_collection(db):
+    logger.info("Creating collection 'products'!")
+    db.create_collection(
+        "products",
+        validator={
+            "$jsonSchema": {
+                "bsonType": "object",
+                "required": [
+                    "_id",
+                    "seller_id",
+                    "name",
+                    "price",
+                    "image_b64",
+                    "description",
+                ],
+                "properties": {
+                    "_id": {
+                        "bsonType": "string",
+                        "description": "must be a string and is required",
+                    },
+                    "seller_id": {
+                        "bsonType": "string",
+                        "description": "must be a string and is required",
+                    },
+                    "name": {
+                        "bsonType": "string",
+                        "description": "must be a string and is required",
+                    },
+                    "price": {
+                        "bsonType": "double",
+                        "description": "must be a double and is required",
+                    },
+                    "image_b64": {
+                        "bsonType": "string",
+                        "description": "must be a string and is required",
+                    },
+                    "description": {
+                        "bsonType": "string",
+                        "description": "must be a string and is required",
+                    },
+                },
+            }
+        },
+    )
+
+
 def create_stock_collection_if_not_exists(db):
     try:
         db.validate_collection("stock")
@@ -38,6 +84,15 @@ def create_stock_collection_if_not_exists(db):
     except OperationFailure:
         # create the stock collection
         _create_stock_collection(db)
+
+
+def create_products_collection_if_not_exists(db):
+    try:
+        db.validate_collection("products")
+        logger.info("Collection 'products' available.")
+    except OperationFailure:
+        # create the products collection
+        _create_products_collection(db)
 
 
 def connect_to_database(host, dbname):
