@@ -1,10 +1,29 @@
-name: Build and push to ACR
+name: Test, build and push to ACR
 on:
   push:
     branches:
       - main
 
 jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4.2.2
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      
+      - name: Install PDM
+        run: python -m pip install --user pdm
+
+      - name: Install dependencies
+        run: pdm install
+
   deploy:
     name: build and push to ACR 
     runs-on: ubuntu-latest
