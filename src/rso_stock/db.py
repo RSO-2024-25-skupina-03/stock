@@ -39,7 +39,7 @@ def _create_products_collection(db):
             "$jsonSchema": {
                 "bsonType": "object",
                 "required": [
-                    "_id",
+                    "product_id",
                     "seller_id",
                     "name",
                     "price",
@@ -47,7 +47,7 @@ def _create_products_collection(db):
                     "description",
                 ],
                 "properties": {
-                    "_id": {
+                    "product_id": {
                         "bsonType": "string",
                         "description": "must be a string and is required",
                     },

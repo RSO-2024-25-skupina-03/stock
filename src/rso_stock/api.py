@@ -1,10 +1,12 @@
 from rso_stock.db import connect_to_database, create_stock_collection_if_not_exists
 from rso_stock.stock_utils import get_stock_info, get_product_info
 from fastapi import FastAPI
-from fastapi.middleware.wsgi import WSGIMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+import base64
 import uvicorn
 import json
+import requests
+import logging
 
 app = FastAPI()
 
@@ -71,18 +73,60 @@ async def generate_test_data():
     # create the collection if it doesn't exist yet
     create_stock_collection_if_not_exists(db_conn)
 
-    # insert test data
-    db_conn["stock"].insert_many(
-        [
-            {"product_id": "1", "stock_amount": 10},
-            {"product_id": "2", "stock_amount": 20},
-            {"product_id": "3", "stock_amount": 30},
-            {"product_id": "4", "stock_amount": 0},
-        ]
-    )
+    # try to fetch data from the external API
+    API_URL = "https://fakestoreapi.com"
+    products = []
+    stocks = []
+    error = False
 
-    products_data = json.load(open("src/rso_stock/test_product_data.json"))
-    db_conn["products"].insert_many(products_data["data"])
+    for i in range(1, 10):
+        try:
+            response = requests.get(f"{API_URL}/products/{i}")
+            if response.status_code == 200:
+                data = response.json()
+                logging.info(
+                    f"Successfully fetched data from the external api: {json.dumps(data)}"
+                )
+
+                image_url = data["image"]
+                image_response = requests.get(image_url)
+                image_b64 = base64.b64encode(image_response.content)
+
+                product = {
+                    "product_id": str(data["id"]),
+                    "seller_id": str(data["id"] + 1),
+                    "name": data["title"],
+                    "description": data["description"],
+                    "image_b64": image_b64,
+                    "price": data["price"],
+                }
+
+                stock = {
+                    "product_id": str(data["id"]),
+                    "stock_amount": i * 10,
+                }
+
+                products.append(product)
+                stocks.append(stock)
+            else:
+                error = True
+                logging.error(
+                    f"Failed to fetch data from the external api: {response.status_code}"
+                )
+                break
+        except Exception as e:
+            error = True
+            logging.error(f"Failed to fetch data from the external api: {e}")
+            break
+
+    if error:
+        products_data = json.load(open("src/rso_stock/test_product_data.json"))
+        products = products_data["data"]
+        stocks = [{"product_id": str(i), "stock_amount": i * 10} for i in range(1, 10)]
+
+    # insert test data
+    db_conn["products"].insert_many(products)
+    db_conn["stock"].insert_many(stocks)
     return {"status": "Test data generated!"}
 
 

@@ -19,8 +19,8 @@ class StockInfo:
 
 
 class ProductInfo:
-    def __init__(self, _id, seller_id, name, price, description, image_b64):
-        self._id = _id
+    def __init__(self, product_id, seller_id, name, price, description, image_b64):
+        self.product_id = product_id
         self.seller_id = seller_id
         self.name = name
         self.price = price
@@ -29,7 +29,7 @@ class ProductInfo:
 
     def to_dict(self):
         return {
-            "_id": self._id,
+            "product_id": self.product_id,
             "seller_id": self.seller_id,
             "name": self.name,
             "price": self.price,
@@ -43,7 +43,7 @@ def get_stock_info(db_conn, product_id) -> StockInfo:
     specified ID from the database using the provided DB connection object.
 
     Args:
-        db_conn (None): The DB cpnnection.
+        db_conn (None): The DB connection.
         product_id (str): The product ID.
 
     Returns:
@@ -73,14 +73,14 @@ def get_product_info(db_conn, product_id) -> StockInfo:
     """
     create_products_collection_if_not_exists(db_conn)
 
-    product_info = db_conn["products"].find_one({"_id": product_id})
+    product_info = db_conn["products"].find_one({"product_id": product_id})
     if product_info is None:
         return ProductInfo(product_id, None, None, None, None, None)
     else:
-        _id = product_info["_id"]
+        product_id = product_info["product_id"]
         seller_id = product_info["seller_id"]
         name = product_info["name"]
         price = product_info["price"]
         description = product_info["description"]
         image_b64 = product_info["image_b64"]
-        return ProductInfo(_id, seller_id, name, price, description, image_b64)
+        return ProductInfo(product_id, seller_id, name, price, description, image_b64)
