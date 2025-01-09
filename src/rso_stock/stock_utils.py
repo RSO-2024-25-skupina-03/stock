@@ -75,7 +75,7 @@ def get_product_info(db_conn, product_id) -> StockInfo:
 
     product_info = db_conn["products"].find_one({"product_id": product_id})
     if product_info is None:
-        return ProductInfo(product_id, None, None, None, None, None)
+        return None
     else:
         product_id = product_info["product_id"]
         seller_id = product_info["seller_id"]

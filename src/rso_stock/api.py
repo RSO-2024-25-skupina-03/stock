@@ -1,6 +1,7 @@
 from rso_stock.db import connect_to_database, create_stock_collection_if_not_exists
-from rso_stock.stock_utils import get_stock_info, get_product_info
+from rso_stock.stock_utils import StockInfo, get_stock_info, get_product_info
 from fastapi import FastAPI
+from fastapi.exceptions import HTTPException
 from prometheus_fastapi_instrumentator import Instrumentator
 import base64
 import uvicorn
@@ -49,6 +50,40 @@ async def product_stock(product_id) -> dict:
     return stock_info.to_dict()
 
 
+@app.put("/stock/{product_id}/{new_value}")
+async def update_stock(product_id, new_value) -> dict:
+    # check if the product exists
+    db_conn = connect_to_database("mongo", "rso_shop")
+    product_info = get_product_info(db_conn, product_id)
+    if product_info is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # check if new value is a positive integer
+    value = None
+    try:
+        value = int(new_value)
+        if value < 0:
+            raise ValueError
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="New value must be a positive integer"
+        )
+
+    existing = db_conn["stock"].find_one({"product_id": product_id})
+    new_stock_info = StockInfo(product_id, value)
+
+    if existing is None:
+        # the product with the specified id does not exist,
+        # therefore its stock equals to 0
+        db_conn["stock"].insert_one({"product_id": product_id, "stock_amount": value})
+    else:
+        db_conn["stock"].update_one(
+            {"product_id": product_id},
+            {"$set": {"stock_amount": value}},
+        )
+    return new_stock_info.to_dict()
+
+
 @app.get("/info/{product_id}")
 async def product_info(product_id) -> dict:
     """An endpoint to fetch product information.
@@ -61,6 +96,10 @@ async def product_info(product_id) -> dict:
     """
     db_conn = connect_to_database("mongo", "rso_shop")
     product_info = get_product_info(db_conn, product_id)
+
+    if product_info is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
     return product_info.to_dict()
 
 
@@ -90,14 +129,14 @@ async def generate_test_data():
 
                 image_url = data["image"]
                 image_response = requests.get(image_url)
-                image_b64 = base64.b64encode(image_response.content)
+                image_b64 = base64.b64encode(image_response.content).decode("ascii")
 
                 product = {
                     "product_id": str(data["id"]),
                     "seller_id": str(data["id"] + 1),
                     "name": data["title"],
                     "description": data["description"],
-                    "image_b64": image_b64,
+                    "image_b64": f"data:image/png;base64,{image_b64}",
                     "price": data["price"],
                 }
 
