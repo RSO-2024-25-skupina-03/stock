@@ -6,6 +6,7 @@ from rso_stock.stock_utils import (
     get_stock_info,
     get_product_info,
 )
+from rso_stock.utils import loki_handler
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -14,6 +15,10 @@ import uvicorn
 import json
 import requests
 import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(loki_handler)
 
 app = FastAPI()
 
@@ -26,6 +31,7 @@ async def root():
     """
     Returns a message.
     """
+    logger.info("GET /")
     return {"status": "Stock API online"}
 
 
@@ -36,6 +42,7 @@ async def ids() -> list:
     Returns:
         list: A list of product IDs.
     """
+    logger.info("GET /ids")
     db_conn = connect_to_database("mongo", "rso_shop")
     product_ids = db_conn["stock"].distinct("product_id")
     return product_ids
@@ -51,6 +58,7 @@ async def product_stock(product_id) -> dict:
     Returns:
         dict: An object containing stock information.
     """
+    logger.info(f"GET /stock/{product_id}")
     db_conn = connect_to_database("mongo", "rso_shop")
     stock_info = get_stock_info(db_conn, product_id)
     return stock_info.to_dict()
@@ -76,10 +84,12 @@ async def product_info(product_id) -> dict:
     Returns:
         dict: An object containing product information.
     """
+    logger.info(f"GET /info/{product_id}")
     db_conn = connect_to_database("mongo", "rso_shop")
     product_info = get_product_info(db_conn, product_id)
 
     if product_info is None:
+        logger.warning(f"Product {product_id} not found")
         raise HTTPException(status_code=404, detail="Product not found")
 
     return product_info.to_dict()
@@ -97,11 +107,21 @@ async def product_info(product_id) -> dict:
     },
 )
 async def add_product(product: ProductModel) -> dict:
+    """An endpoint to add a product to the database.
+
+    Args:
+        product (ProductModel): A ProductModel object.
+
+    Returns:
+        dict: An object containing product information.
+    """
+    logger.info("POST /product")
     db_conn = connect_to_database("mongo", "rso_shop")
 
     # check if the product already exists
     existing = db_conn["products"].find_one({"product_id": product.product_id})
     if existing is not None:
+        logger.warning("Product already exists")
         raise HTTPException(status_code=409, detail="Product already exists")
 
     db_conn["products"].insert_one(dict(product))
@@ -112,6 +132,7 @@ async def add_product(product: ProductModel) -> dict:
 @app.post("/generate_test_data")
 async def generate_test_data():
     """An endpoint to generate test data for the stock collection."""
+    logger.info("POST /generate_test_data")
     db_conn = connect_to_database("mongo", "rso_shop")
 
     # create the collection if it doesn't exist yet
@@ -128,7 +149,7 @@ async def generate_test_data():
             response = requests.get(f"{API_URL}/products/{i}")
             if response.status_code == 200:
                 data = response.json()
-                logging.info(
+                logger.info(
                     f"Successfully fetched data from the external api: {json.dumps(data)}"
                 )
 
@@ -154,13 +175,13 @@ async def generate_test_data():
                 stocks.append(stock)
             else:
                 error = True
-                logging.error(
+                logger.warning(
                     f"Failed to fetch data from the external api: {response.status_code}"
                 )
                 break
         except Exception as e:
             error = True
-            logging.error(f"Failed to fetch data from the external api: {e}")
+            logger.warning(f"Failed to fetch data from the external api: {e}")
             break
 
     if error:
@@ -176,10 +197,22 @@ async def generate_test_data():
 
 @app.put("/stock/{product_id}/{new_value}")
 async def update_stock(product_id, new_value) -> dict:
+    """An endpoint to update stock information for a product.
+
+    Args:
+        product_id (str): Product ID.
+        new_value (str): New value.
+
+    Returns:
+        dict: An object containing stock information.
+    """
+    logger.info(f"PUT /stock/{product_id}/{new_value}")
+
     # check if the product exists
     db_conn = connect_to_database("mongo", "rso_shop")
     product_info = get_product_info(db_conn, product_id)
     if product_info is None:
+        logger.warning(f"Product {product_id} not found")
         raise HTTPException(status_code=404, detail="Product not found")
 
     # check if new value is a positive integer
@@ -187,8 +220,10 @@ async def update_stock(product_id, new_value) -> dict:
     try:
         value = int(new_value)
         if value < 0:
+            logger.warning("Non-positive integer")
             raise ValueError
     except ValueError:
+        logger.warning("New value is not a non-positive integer")
         raise HTTPException(
             status_code=400, detail="New value must be a positive integer"
         )
@@ -201,6 +236,7 @@ async def update_stock(product_id, new_value) -> dict:
         # therefore its stock equals to 0
         db_conn["stock"].insert_one({"product_id": product_id, "stock_amount": value})
     else:
+        logger.info(f"Found existing stock info for product {product_id}")
         db_conn["stock"].update_one(
             {"product_id": product_id},
             {"$set": {"stock_amount": value}},

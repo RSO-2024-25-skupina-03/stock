@@ -1,10 +1,11 @@
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
+from rso_stock.utils import loki_handler
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(loki_handler)
 
 
 def _create_stock_collection(db):

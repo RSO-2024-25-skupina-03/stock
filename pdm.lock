@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:6f6cb4f294a1ea26983b09ad565dede25f6d8c4494da385f822457b8f7af9dac"
+content_hash = "sha256:d614e78007ba4018f2c2d71a1eae2e79e13e70257818b84610d37cae2a510f66"
 
 [[metadata.targets]]
 requires_python = "==3.11.*"
@@ -440,6 +440,21 @@ files = [
 ]
 
 [[package]]
+name = "python-logging-loki"
+version = "0.3.1"
+requires_python = ">=3.6"
+summary = "Python logging handler for Grafana Loki."
+groups = ["default"]
+dependencies = [
+    "requests",
+    "rfc3339>=6.1",
+]
+files = [
+    {file = "python-logging-loki-0.3.1.tar.gz", hash = "sha256:b83610c8a3adc99fbab072493b91dfb25ced69be4874fefe3ab457b391adbf60"},
+    {file = "python_logging_loki-0.3.1-py3-none-any.whl", hash = "sha256:8a9131db037fbea3d390089c4c32dbe7ed233944905079615a9fb6f669b0f4e6"},
+]
+
+[[package]]
 name = "requests"
 version = "2.32.3"
 requires_python = ">=3.8"
@@ -454,6 +469,16 @@ dependencies = [
 files = [
     {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
     {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
+]
+
+[[package]]
+name = "rfc3339"
+version = "6.2"
+summary = "Format dates according to the RFC 3339."
+groups = ["default"]
+files = [
+    {file = "rfc3339-6.2-py3-none-any.whl", hash = "sha256:f44316b21b21db90a625cde04ebb0d46268f153e6093021fa5893e92a96f58a3"},
+    {file = "rfc3339-6.2.tar.gz", hash = "sha256:d53c3b5eefaef892b7240ba2a91fef012e86faa4d0a0ca782359c490e00ad4d0"},
 ]
 
 [[package]]

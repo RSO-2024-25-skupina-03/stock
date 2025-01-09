@@ -2,12 +2,13 @@ from rso_stock.db import (
     create_stock_collection_if_not_exists,
     create_products_collection_if_not_exists,
 )
+from rso_stock.utils import loki_handler
 from pydantic import BaseModel
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(loki_handler)
 
 
 class StockInfo:

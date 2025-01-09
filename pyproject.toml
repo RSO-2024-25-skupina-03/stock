@@ -13,6 +13,7 @@ dependencies = [
     "tox>=4.23.2",
     "prometheus-fastapi-instrumentator>=7.0.0",
     "requests>=2.32.3",
+    "python-logging-loki>=0.3.1",
 ]
 requires-python = "==3.11.*"
 readme = "README.md"
