@@ -1,10 +1,15 @@
 from rso_stock.db import connect_to_database, create_stock_collection_if_not_exists
 from rso_stock.stock_utils import get_stock_info, get_product_info
 from fastapi import FastAPI
+from fastapi.middleware.wsgi import WSGIMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 import uvicorn
 import json
 
 app = FastAPI()
+
+# metrics
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/")
@@ -27,7 +32,7 @@ async def ids() -> list:
     return product_ids
 
 
-@app.get("/{id}")
+@app.get("/stock/{product_id}")
 async def product_stock(product_id) -> dict:
     """An endpoint to fetch stock information for a product.
 
@@ -42,7 +47,7 @@ async def product_stock(product_id) -> dict:
     return stock_info.to_dict()
 
 
-@app.get("/info/{id}")
+@app.get("/info/{product_id}")
 async def product_info(product_id) -> dict:
     """An endpoint to fetch product information.
 
@@ -82,4 +87,4 @@ async def generate_test_data():
 
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("api:app", host="0.0.0.0", port=8080, reload=False)
