@@ -1,7 +1,7 @@
 {
     "data": [
         {
-            "_id": "1",
+            "product_id": "1",
             "seller_id": "1",
             "name": "Product 1",
             "price": 100,
@@ -9,7 +9,7 @@
             "description": "Description 1"
         },
         {
-            "_id": "2",
+            "product_id": "2",
             "seller_id": "2",
             "name": "Product 2",
             "price": 200,
