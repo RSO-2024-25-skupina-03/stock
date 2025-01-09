@@ -1,5 +1,11 @@
 from rso_stock.db import connect_to_database, create_stock_collection_if_not_exists
-from rso_stock.stock_utils import StockInfo, get_stock_info, get_product_info
+from rso_stock.stock_utils import (
+    StockInfo,
+    ProductInfo,
+    ProductModel,
+    get_stock_info,
+    get_product_info,
+)
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -50,41 +56,17 @@ async def product_stock(product_id) -> dict:
     return stock_info.to_dict()
 
 
-@app.put("/stock/{product_id}/{new_value}")
-async def update_stock(product_id, new_value) -> dict:
-    # check if the product exists
-    db_conn = connect_to_database("mongo", "rso_shop")
-    product_info = get_product_info(db_conn, product_id)
-    if product_info is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-
-    # check if new value is a positive integer
-    value = None
-    try:
-        value = int(new_value)
-        if value < 0:
-            raise ValueError
-    except ValueError:
-        raise HTTPException(
-            status_code=400, detail="New value must be a positive integer"
-        )
-
-    existing = db_conn["stock"].find_one({"product_id": product_id})
-    new_stock_info = StockInfo(product_id, value)
-
-    if existing is None:
-        # the product with the specified id does not exist,
-        # therefore its stock equals to 0
-        db_conn["stock"].insert_one({"product_id": product_id, "stock_amount": value})
-    else:
-        db_conn["stock"].update_one(
-            {"product_id": product_id},
-            {"$set": {"stock_amount": value}},
-        )
-    return new_stock_info.to_dict()
-
-
-@app.get("/info/{product_id}")
+@app.get(
+    "/info/{product_id}",
+    responses={
+        404: {
+            "detail": "Product not found",
+            "content": {
+                "application/json": {"example": {"detail": "Product not found"}}
+            },
+        }
+    },
+)
 async def product_info(product_id) -> dict:
     """An endpoint to fetch product information.
 
@@ -101,6 +83,29 @@ async def product_info(product_id) -> dict:
         raise HTTPException(status_code=404, detail="Product not found")
 
     return product_info.to_dict()
+
+
+@app.post(
+    "/product",
+    responses={
+        409: {
+            "description": "Product already exists",
+            "content": {
+                "application/json": {"example": {"detail": "Product already exists"}}
+            },
+        }
+    },
+)
+async def add_product(product: ProductModel) -> dict:
+    db_conn = connect_to_database("mongo", "rso_shop")
+
+    # check if the product already exists
+    existing = db_conn["products"].find_one({"product_id": product.product_id})
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="Product already exists")
+
+    db_conn["products"].insert_one(dict(product))
+    return dict(product)
 
 
 # TODO protect this endpoint (JWT?)
@@ -167,6 +172,40 @@ async def generate_test_data():
     db_conn["products"].insert_many(products)
     db_conn["stock"].insert_many(stocks)
     return {"status": "Test data generated!"}
+
+
+@app.put("/stock/{product_id}/{new_value}")
+async def update_stock(product_id, new_value) -> dict:
+    # check if the product exists
+    db_conn = connect_to_database("mongo", "rso_shop")
+    product_info = get_product_info(db_conn, product_id)
+    if product_info is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # check if new value is a positive integer
+    value = None
+    try:
+        value = int(new_value)
+        if value < 0:
+            raise ValueError
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="New value must be a positive integer"
+        )
+
+    existing = db_conn["stock"].find_one({"product_id": product_id})
+    new_stock_info = StockInfo(product_id, value)
+
+    if existing is None:
+        # the product with the specified id does not exist,
+        # therefore its stock equals to 0
+        db_conn["stock"].insert_one({"product_id": product_id, "stock_amount": value})
+    else:
+        db_conn["stock"].update_one(
+            {"product_id": product_id},
+            {"$set": {"stock_amount": value}},
+        )
+    return new_stock_info.to_dict()
 
 
 if __name__ == "__main__":

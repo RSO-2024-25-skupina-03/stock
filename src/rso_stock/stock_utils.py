@@ -2,6 +2,7 @@ from rso_stock.db import (
     create_stock_collection_if_not_exists,
     create_products_collection_if_not_exists,
 )
+from pydantic import BaseModel
 import logging
 import sys
 
@@ -16,6 +17,15 @@ class StockInfo:
 
     def to_dict(self):
         return {"product_id": self.product_id, "stock_amount": self.stock_amount}
+
+
+class ProductModel(BaseModel):
+    product_id: str
+    seller_id: str
+    name: str
+    price: float
+    description: str
+    image_b64: str
 
 
 class ProductInfo:
