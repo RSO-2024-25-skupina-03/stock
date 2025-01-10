@@ -1,3 +1,7 @@
 # stock
 
-Run the API with `pdm api`
+This repository contains the source code for the `stock` microservice,
+which keeps track of and manages product data and stock information.
+
+## Usage
+- start the API with `pdm api`.
