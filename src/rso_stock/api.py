@@ -35,37 +35,45 @@ async def root():
     return {"status": "Stock API online"}
 
 
-@app.get("/ids")
-async def ids() -> list:
+@app.get("/{tenant}/ids")
+async def ids(tenant) -> list:
     """An endpoint to fetch all product IDs.
+
+    Args:
+        tenant (str): Tenant name.
 
     Returns:
         list: A list of product IDs.
     """
-    logger.info("GET /ids")
-    db_conn = connect_to_database("mongo", "rso_shop")
+    logger.info(f"GET /{tenant}/ids")
+    db_name = f"rso_shop_{tenant}"
+    logger.info(f"Using database: {db_name}")
+    db_conn = connect_to_database("mongo", db_name)
     product_ids = db_conn["stock"].distinct("product_id")
     return product_ids
 
 
-@app.get("/stock/{product_id}")
-async def product_stock(product_id) -> dict:
+@app.get("/{tenant}/stock/{product_id}")
+async def product_stock(tenant, product_id) -> dict:
     """An endpoint to fetch stock information for a product.
 
     Args:
+        tenant (str): Tenant name.
         product_id (str): Product ID.
 
     Returns:
         dict: An object containing stock information.
     """
-    logger.info(f"GET /stock/{product_id}")
-    db_conn = connect_to_database("mongo", "rso_shop")
+    logger.info(f"GET /{tenant}/stock/{product_id}")
+    db_name = f"rso_shop_{tenant}"
+    logger.info(f"Using database: {db_name}")
+    db_conn = connect_to_database("mongo", db_name)
     stock_info = get_stock_info(db_conn, product_id)
     return stock_info.to_dict()
 
 
 @app.get(
-    "/info/{product_id}",
+    "/{tenant}/info/{product_id}",
     responses={
         404: {
             "detail": "Product not found",
@@ -75,17 +83,20 @@ async def product_stock(product_id) -> dict:
         }
     },
 )
-async def product_info(product_id) -> dict:
+async def product_info(tenant, product_id) -> dict:
     """An endpoint to fetch product information.
 
     Args:
+        tenant (str): Tenant name.
         product_id (str): Product ID.
 
     Returns:
         dict: An object containing product information.
     """
-    logger.info(f"GET /info/{product_id}")
-    db_conn = connect_to_database("mongo", "rso_shop")
+    logger.info(f"GET /{tenant}/info/{product_id}")
+    db_name = f"rso_shop_{tenant}"
+    logger.info(f"Using database: {db_name}")
+    db_conn = connect_to_database("mongo", db_name)
     product_info = get_product_info(db_conn, product_id)
 
     if product_info is None:
@@ -96,7 +107,7 @@ async def product_info(product_id) -> dict:
 
 
 @app.post(
-    "/product",
+    "/{tenant}/product",
     responses={
         409: {
             "description": "Product already exists",
@@ -106,17 +117,20 @@ async def product_info(product_id) -> dict:
         }
     },
 )
-async def add_product(product: ProductModel) -> dict:
+async def add_product(tenant, product: ProductModel) -> dict:
     """An endpoint to add a product to the database.
 
     Args:
+        tenant (str): Tenant name.
         product (ProductModel): A ProductModel object.
 
     Returns:
         dict: An object containing product information.
     """
-    logger.info("POST /product")
-    db_conn = connect_to_database("mongo", "rso_shop")
+    logger.info(f"POST /{tenant}/product")
+    db_name = f"rso_shop_{tenant}"
+    logger.info(f"Using database: {db_name}")
+    db_conn = connect_to_database("mongo", db_name)
 
     # check if the product already exists
     existing = db_conn["products"].find_one({"product_id": product.product_id})
@@ -129,10 +143,18 @@ async def add_product(product: ProductModel) -> dict:
 
 
 # TODO protect this endpoint (JWT?)
-@app.post("/generate_test_data")
-async def generate_test_data():
-    """An endpoint to generate test data for the stock collection."""
-    logger.info("POST /generate_test_data")
+@app.post("/{tenant}/generate_test_data")
+async def generate_test_data(tenant):
+    """An endpoint to generate test data for the stock collection.
+
+    Args:
+        tenant (str): Tenant name.
+
+    Returns:
+        str: A message.
+    """
+
+    logger.info(f"POST /{tenant}/generate_test_data")
     db_conn = connect_to_database("mongo", "rso_shop")
 
     # create the collection if it doesn't exist yet
@@ -195,21 +217,24 @@ async def generate_test_data():
     return {"status": "Test data generated!"}
 
 
-@app.put("/stock/{product_id}/{new_value}")
-async def update_stock(product_id, new_value) -> dict:
+@app.put("/{tenant}/stock/{product_id}/{new_value}")
+async def update_stock(tenant, product_id, new_value) -> dict:
     """An endpoint to update stock information for a product.
 
     Args:
+        tenant (str): Tenant name.
         product_id (str): Product ID.
         new_value (str): New value.
 
     Returns:
         dict: An object containing stock information.
     """
-    logger.info(f"PUT /stock/{product_id}/{new_value}")
+    logger.info(f"PUT /{tenant}/stock/{product_id}/{new_value}")
 
     # check if the product exists
-    db_conn = connect_to_database("mongo", "rso_shop")
+    db_name = f"rso_shop_{tenant}"
+    logger.info(f"Using database: {db_name}")
+    db_conn = connect_to_database("mongo", db_name)
     product_info = get_product_info(db_conn, product_id)
     if product_info is None:
         logger.warning(f"Product {product_id} not found")
