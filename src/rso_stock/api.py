@@ -186,7 +186,7 @@ async def generate_test_data(tenant):
                     "name": data["title"],
                     "description": data["description"],
                     "image_b64": f"data:image/png;base64,{image_b64}",
-                    "price": data["price"],
+                    "price": float(data["price"]),
                 }
 
                 stock = {
