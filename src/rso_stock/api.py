@@ -154,7 +154,9 @@ async def generate_test_data(tenant):
     """
 
     logger.info(f"POST /{tenant}/generate_test_data")
-    db_conn = connect_to_database("mongo", "rso_shop")
+    db_name = f"rso_shop_{tenant}"
+    logger.info(f"Using database: {db_name}")
+    db_conn = connect_to_database("mongo", db_name)
 
     # create the collection if it doesn't exist yet
     create_stock_collection_if_not_exists(db_conn)
